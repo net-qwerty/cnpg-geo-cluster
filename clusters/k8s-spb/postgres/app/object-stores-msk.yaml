@@ -1,0 +1,21 @@
+---
+apiVersion: barmancloud.cnpg.io/v1
+kind: ObjectStore
+metadata:
+  name: app-msk-store
+  namespace: postgres
+spec:
+  retentionPolicy: "365d"
+  configuration:
+    destinationPath: s3://app-msk-pg/
+    endpointURL: https://s3.ru-2.storage.selcloud.ru
+    s3Credentials:
+      accessKeyId:
+        name: app-s3-credentials
+        key: ACCESS_KEY_ID
+      secretAccessKey:
+        name: app-s3-credentials
+        key: ACCESS_SECRET_KEY
+    wal:
+      maxParallel: 8
+      compression: gzip

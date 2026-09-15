@@ -1,0 +1,31 @@
+---
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: longhorn
+  namespace: longhorn-system
+spec:
+  interval: 10m
+  chart:
+    spec:
+      chart: longhorn
+      reconcileStrategy: ChartVersion
+      sourceRef:
+        kind: HelmRepository
+        name: longhorn
+        namespace: flux-system
+      version: v1.12.1
+  values:
+    global:
+      nodeSelector:
+        node-role.kubernetes.io/postgres: postgres
+      tolerations:
+        - key: node-role.kubernetes.io/postgres
+          operator: Exists
+          effect: NoSchedule
+
+    networkPolicies:
+      restrictInternalTraffic: false
+
+    defaultSettings:
+      taintToleration: "node-role.kubernetes.io/postgres:NoSchedule"

@@ -1,0 +1,77 @@
+---
+apiVersion: postgresql.cnpg.io/v1
+kind: Cluster
+metadata:
+  name: app-spb-pg
+spec:
+  instances: 3
+  imageName: ghcr.io/cloudnative-pg/postgresql:17.4
+  failoverDelay: 3
+
+  affinity:
+    enablePodAntiAffinity: true
+    topologyKey: topology.kubernetes.io/zone
+    podAntiAffinityType: required
+    nodeSelector:
+      node-role.kubernetes.io/postgres: "postgres"
+    tolerations:
+      - key: node-role.kubernetes.io/postgres
+        operator: Exists
+        effect: NoSchedule
+
+  superuserSecret:
+    name: app-superuser-secret
+
+  bootstrap:
+    initdb:
+      database: app
+      owner: app
+      encoding: UTF8
+      localeCollate: en_US.utf8
+      localeCType: en_US.utf8
+      secret:
+        name: app-pg-app
+
+  plugins:
+    - name: barman-cloud.cloudnative-pg.io
+      isWALArchiver: true
+      parameters:
+        barmanObjectName: app-spb-store
+        serverName: app-spb-pg
+
+  externalClusters:
+    # MSK
+    - name: app-msk-pg
+      plugin:
+        name: barman-cloud.cloudnative-pg.io
+        parameters:
+          barmanObjectName: app-msk-store
+          serverName: app-msk-pg
+    # SPB
+    - name: app-spb-pg
+      plugin:
+        name: barman-cloud.cloudnative-pg.io
+        parameters:
+          barmanObjectName: app-spb-store
+          serverName: app-spb-pg
+
+  replica:
+    # controle master or replica cluster
+    primary: app-spb-pg
+    source: app-msk-pg
+
+  storage:
+    storageClass: longhorn-local
+    size: 40Gi
+
+  walStorage:
+    storageClass: longhorn-local
+    size: 10Gi
+
+  resources:
+    requests:
+      memory: 1Gi
+      cpu: 500m
+    limits:
+      memory: 2Gi
+      cpu: "1"

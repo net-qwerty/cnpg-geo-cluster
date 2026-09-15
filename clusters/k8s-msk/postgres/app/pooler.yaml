@@ -1,0 +1,52 @@
+---
+apiVersion: postgresql.cnpg.io/v1
+kind: Pooler
+metadata:
+  name: app-msk-rw
+spec:
+  cluster:
+    name: app-msk-pg
+  instances: 3
+  type: rw
+  pgbouncer:
+    poolMode: transaction
+    parameters:
+      max_client_conn: "1000"
+      default_pool_size: "30"
+  deploymentStrategy:
+    rollingUpdate:
+      maxSurge: 0
+      maxUnavailable: 1
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        app: app-msk-rw
+    spec:
+      containers:
+        - name: pgbouncer
+          # https://github.com/cloudnative-pg/pgbouncer-containers/tags
+          image: ghcr.io/cloudnative-pg/pgbouncer:1.24.1-23
+          resources:
+            requests:
+              cpu: "0.1"
+              memory: 100Mi
+            limits:
+              cpu: "0.4"
+              memory: 500Mi
+      nodeSelector:
+        node-role.kubernetes.io/postgres: "postgres"
+      tolerations:
+        - key: node-role.kubernetes.io/postgres
+          operator: Exists
+          effect: NoSchedule
+      affinity:
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            - labelSelector:
+                matchExpressions:
+                  - key: app
+                    operator: In
+                    values:
+                      - app-msk-rw
+              topologyKey: "topology.kubernetes.io/zone"

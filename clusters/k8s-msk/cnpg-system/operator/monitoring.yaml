@@ -1,0 +1,27 @@
+---
+apiVersion: monitoring.coreos.com/v1
+kind: PodMonitor
+metadata:
+  labels:
+    app.kubernetes.io/name: cloudnative-pg
+  name: cnpg-operator
+spec:
+  jobLabel: jobLabel
+  namespaceSelector:
+    matchNames:
+      - cnpg-system
+  podMetricsEndpoints:
+    - path: /metrics
+      port: metrics
+      interval: 30s
+      relabelings:
+        - action: replace
+          sourceLabels: [__meta_kubernetes_pod_name]
+          targetLabel: instance
+      metricRelabelings:
+        - action: labeldrop
+          regex: (endpoint)
+  selector:
+    matchLabels:
+      app.kubernetes.io/instance: cnpg
+      app.kubernetes.io/name: cloudnative-pg

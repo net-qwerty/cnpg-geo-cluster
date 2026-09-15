@@ -1,0 +1,24 @@
+---
+apiVersion: monitoring.coreos.com/v1
+kind: PodMonitor
+metadata:
+  name: app-spb-pg
+  namespace: postgres
+spec:
+  selector:
+    matchLabels:
+      cnpg.io/cluster: app-spb-pg
+
+  podMetricsEndpoints:
+    - path: /metrics
+      port: metrics
+      interval: 20s
+      relabelings:
+        - action: replace
+          sourceLabels: [__meta_kubernetes_pod_name]
+          targetLabel: instance
+      metricRelabelings:
+        - targetLabel: cnpg_cluster
+          replacement: app-spb-pg
+        - action: labeldrop
+          regex: (endpoint)

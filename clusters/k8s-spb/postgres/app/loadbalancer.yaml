@@ -1,0 +1,19 @@
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: app-spb-pg-lb
+  namespace: postgres
+  labels:
+    app: app-spb-pg
+spec:
+  type: LoadBalancer
+  # По умолчанию IP выделяет провайдер.
+  # Для заранее выделенного адреса раскомментируйте и замените <IP>.
+  # loadBalancerIP: <IP>
+  selector:
+    cnpg.io/poolerName: app-spb-rw
+  ports:
+    - port: 5432
+      targetPort: 5432
+      protocol: TCP
