@@ -8,7 +8,7 @@ spec:
   retentionPolicy: "365d"
   configuration:
     destinationPath: s3://app-msk-pg/
-    endpointURL: https://s3.ru-2.storage.selcloud.ru
+    endpointURL: https://s3.ru-7.storage.selcloud.ru
     s3Credentials:
       accessKeyId:
         name: app-s3-credentials
